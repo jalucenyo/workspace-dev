@@ -4,32 +4,28 @@ Playbook para instalar y configurar un entorno de desarrollo completo en Ubuntu,
 
 ## Instalacion rapida en una maquina nueva
 
-### 1. Clonar el repositorio
+El script `install.sh` puede descargarse y ejecutarse directamente con `curl`. Solo necesitas un [PAT de GitHub](https://github.com/settings/tokens) con permisos de lectura sobre repositorios privados.
+
+### 1. Con token de GitHub (autenticacion de gh automatica)
 
 ```bash
-git clone git@github.com:jalucenyo/workspace-dev.git
-cd workspace-dev
+export GITHUB_TOKEN=ghp_TU_TOKEN
+sudo GITHUB_TOKEN=$GITHUB_TOKEN bash -c "$(curl -fsSL -H \"Authorization: token $GITHUB_TOKEN\" https://raw.githubusercontent.com/jalucenyo/workspace-dev/main/install.sh)"
 ```
 
-> Como el repositorio es privado, necesitas tener configurado el acceso SSH a GitHub. Si aun no lo tienes, usa `gh repo clone jalucenyo/workspace-dev` tras autenticar `gh`.
-
-### 2. Ejecutar el script de instalacion
+### 2. Sin token de GitHub (modo interactivo)
 
 ```bash
-sudo ./install.sh
+sudo bash -c "$(curl -fsSL https://raw.githubusercontent.com/jalucenyo/workspace-dev/main/install.sh)"
 ```
 
-El script instalara Ansible si no esta presente y ejecutara el playbook.
+> Sin token el script no podra descargar el repositorio privado. Necesitas el token para el one-liner.
 
-### 3. Autenticacion de GitHub CLI (opcional)
+### 3. Autenticacion de GitHub CLI
 
-Si quieres que `gh` se autentique automaticamente, define el token antes de ejecutar:
+Si usas el one-liner con `GITHUB_TOKEN`, el playbook autenticara `gh` automaticamente para ambos usuarios.
 
-```bash
-sudo GITHUB_TOKEN=ghp_TU_TOKEN ./install.sh
-```
-
-Si no proporcionas el token, el playbook te lo pedira al final de forma interactiva.
+Si no proporcionas el token, el playbook te lo pedira al inicio de forma interactiva.
 
 ## Estructura del proyecto
 
