@@ -28,12 +28,12 @@ fi
 
 # Funcion para descargar el repo publico desde GitHub
 descargar_repo() {
-    echo "Descargando repositorio desde GitHub..."
+    echo "Descargando repositorio desde GitHub..." >&2
     TMP_DIR=$(mktemp -d)
 
     curl -fsSL -L "$ZIP_URL" -o "${TMP_DIR}/repo.zip"
 
-    echo "Extrayendo repositorio..."
+    echo "Extrayendo repositorio..." >&2
     unzip -q "${TMP_DIR}/repo.zip" -d "${TMP_DIR}"
 
     # El directorio extraido tiene un nombre como workspace-dev-main
