@@ -1,4 +1,9 @@
 ---
+- name: Limpiar cache de apt antes de instalar
+  ansible.builtin.command:
+    cmd: apt-get clean
+  changed_when: false
+
 - name: Actualizar cache de apt
   ansible.builtin.apt:
     update_cache: true
