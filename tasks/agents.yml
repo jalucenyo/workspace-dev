@@ -83,7 +83,7 @@
 
 - name: Verificar Claude Code
   become: true
-  become_user: "{{ item.item.name }}"
+  become_user: "{{ item.name }}"
   ansible.builtin.shell:
     cmd: |
       export PATH="$HOME/.local/bin:$HOME/.local/share/fnm:$HOME/.local/share/pnpm:$PATH"
@@ -94,9 +94,9 @@
   register: claude_version_check
   changed_when: false
   failed_when: false
-  loop: "{{ claude_check.results }}"
+  loop: "{{ dev_users }}"
   loop_control:
-    label: "{{ item.item.name }}"
+    label: "{{ item.name }}"
 
 - name: Mostrar version de Claude Code
   ansible.builtin.debug:
