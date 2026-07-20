@@ -4,6 +4,12 @@
     cmd: apt-get clean
   changed_when: false
 
+- name: Reconfigurar paquetes interrumpidos si los hay
+  ansible.builtin.command:
+    cmd: dpkg --configure -a
+  changed_when: false
+  ignore_errors: true
+
 - name: Actualizar cache de apt
   ansible.builtin.apt:
     update_cache: true
