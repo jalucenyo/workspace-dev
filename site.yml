@@ -12,7 +12,7 @@
     - name: github_token
       prompt: "PAT de GitHub (dejar vacio para omitir auth de gh)"
       private: true
-      default: "{{ lookup('env', 'GITHUB_TOKEN') | default('', true) }}"
+      default: ""
 
   tasks:
     - name: Configuracion del sistema

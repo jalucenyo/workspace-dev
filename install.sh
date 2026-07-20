@@ -2,15 +2,17 @@
 set -e
 
 # Script de instalacion para maquinas Ubuntu nuevas.
+# Descarga el repositorio publico y ejecuta el playbook de Ansible.
+#
 # Uso:
+#   curl -fsSL https://raw.githubusercontent.com/jalucenyo/workspace-dev/main/install.sh | sudo bash
 #   ./install.sh
-#   GITHUB_TOKEN=ghp_xxx ./install.sh
-#   sudo GITHUB_TOKEN=ghp_xxx ./install.sh
-#   curl -fsSL -H "Authorization: token $GITHUB_TOKEN" https://raw.githubusercontent.com/jalucenyo/workspace-dev/main/install.sh | sudo GITHUB_TOKEN=$GITHUB_TOKEN bash
 
 REPO_OWNER="jalucenyo"
 REPO_NAME="workspace-dev"
 REPO_BRANCH="main"
+RAW_URL="https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${REPO_BRANCH}"
+ZIP_URL="https://github.com/${REPO_OWNER}/${REPO_NAME}/archive/refs/heads/${REPO_BRANCH}.zip"
 
 # Detectar si estamos en Ubuntu
 if [ ! -f /etc/os-release ]; then
@@ -24,25 +26,17 @@ if [ "$ID" != "ubuntu" ]; then
     exit 1
 fi
 
-# Funcion para descargar el repo privado desde GitHub
+# Funcion para descargar el repo publico desde GitHub
 descargar_repo() {
-    if [ -z "$GITHUB_TOKEN" ]; then
-        echo "ERROR: se necesita GITHUB_TOKEN para descargar el repositorio privado."
-        echo "Ejecuta:"
-        echo "  curl -fsSL -H \"Authorization: token \$GITHUB_TOKEN\" https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${REPO_BRANCH}/install.sh | sudo GITHUB_TOKEN=\$GITHUB_TOKEN bash"
-        exit 1
-    fi
-
-    echo "Descargando repositorio privado desde GitHub..."
+    echo "Descargando repositorio desde GitHub..."
     TMP_DIR=$(mktemp -d)
-    ZIP_URL="https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/zipball/${REPO_BRANCH}"
 
-    curl -fsSL -H "Authorization: token ${GITHUB_TOKEN}" -L "$ZIP_URL" -o "${TMP_DIR}/repo.zip"
+    curl -fsSL -L "$ZIP_URL" -o "${TMP_DIR}/repo.zip"
 
     echo "Extrayendo repositorio..."
     unzip -q "${TMP_DIR}/repo.zip" -d "${TMP_DIR}"
 
-    # El directorio extraido tiene un nombre como jalucenyo-workspace-dev-abcdef
+    # El directorio extraido tiene un nombre como workspace-dev-main
     EXTRACTED_DIR=$(find "${TMP_DIR}" -maxdepth 1 -type d | grep -v "^${TMP_DIR}$" | head -1)
 
     echo "${EXTRACTED_DIR}"
@@ -68,15 +62,8 @@ fi
 cd "$SCRIPT_DIR"
 
 # Ejecutar el playbook
-# Si GITHUB_TOKEN esta definido, se pasa al entorno de ansible-playbook
-# para que el playbook autentique gh automaticamente.
-# Si no esta definido, el playbook pedira el PAT interactivamente.
+# El playbook pedira el PAT de GitHub interactivamente si se quiere autenticar gh.
 echo "Ejecutando playbook de Ansible..."
-if [ -n "$GITHUB_TOKEN" ]; then
-    export GITHUB_TOKEN
-    echo "Usando GITHUB_TOKEN del entorno para autenticar gh."
-fi
-
 ansible-playbook site.yml
 
 echo ""
