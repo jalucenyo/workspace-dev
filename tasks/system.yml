@@ -10,6 +10,12 @@
   changed_when: false
   ignore_errors: true
 
+- name: Corregir dependencias rotas de apt
+  ansible.builtin.command:
+    cmd: apt --fix-broken install -y
+  changed_when: false
+  ignore_errors: true
+
 - name: Actualizar cache de apt
   ansible.builtin.apt:
     update_cache: true
