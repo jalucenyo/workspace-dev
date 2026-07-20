@@ -3,7 +3,7 @@
   become: true
   become_user: "{{ item.name }}"
   ansible.builtin.file:
-    path: "~{{ item.name }}/.local/share/pnpm"
+    path: "~{{ item.name }}/.local/share/pnpm/bin"
     state: directory
     mode: "0755"
   loop: "{{ dev_users }}"
@@ -13,12 +13,10 @@
 - name: Descargar e instalar pnpm
   become: true
   become_user: "{{ item.name }}"
-  ansible.builtin.shell:
-    cmd: |
-      curl -fsSL https://get.pnpm.io/install.sh | env PNPM_HOME="$HOME/.local/share/pnpm" sh -
-  args:
-    creates: "~{{ item.name }}/.local/share/pnpm/bin/pnpm"
-    executable: /bin/bash
+  ansible.builtin.get_url:
+    url: "https://github.com/pnpm/pnpm/releases/download/v9.15.4/pnpm-linux-x64"
+    dest: "~{{ item.name }}/.local/share/pnpm/bin/pnpm"
+    mode: "0755"
   loop: "{{ dev_users }}"
   loop_control:
     label: "{{ item.name }}"
