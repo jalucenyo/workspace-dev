@@ -1,0 +1,65 @@
+---
+- name: Crear directorio de pnpm
+  become: true
+  become_user: "{{ item.name }}"
+  ansible.builtin.file:
+    path: "~{{ item.name }}/.local/share/pnpm"
+    state: directory
+    mode: "0755"
+  loop: "{{ dev_users }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Descargar e instalar pnpm
+  become: true
+  become_user: "{{ item.name }}"
+  ansible.builtin.shell:
+    cmd: |
+      curl -fsSL https://get.pnpm.io/install.sh | env PNPM_HOME="$HOME/.local/share/pnpm" sh -
+  args:
+    creates: "~{{ item.name }}/.local/share/pnpm/bin/pnpm"
+    executable: /bin/bash
+  loop: "{{ dev_users }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Anadir pnpm al PATH
+  become: true
+  become_user: "{{ item.name }}"
+  ansible.builtin.blockinfile:
+    path: "~{{ item.name }}/.bashrc"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK: pnpm"
+    block: |
+      export PNPM_HOME="$HOME/.local/share/pnpm"
+      case ":$PATH:" in
+        *":$PNPM_HOME/bin:"*) ;;
+        *) export PATH="$PNPM_HOME/bin:$PATH" ;;
+      esac
+    create: true
+    mode: "0644"
+  loop: "{{ dev_users }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Verificar pnpm
+  become: true
+  become_user: "{{ item.name }}"
+  ansible.builtin.shell:
+    cmd: |
+      export PNPM_HOME="$HOME/.local/share/pnpm"
+      export PATH="$PNPM_HOME/bin:$PATH"
+      pnpm --version
+  args:
+    executable: /bin/bash
+  register: pnpm_version_check
+  changed_when: false
+  loop: "{{ dev_users }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Mostrar version de pnpm
+  ansible.builtin.debug:
+    msg: "pnpm de {{ item.item.name }}: {{ item.stdout }}"
+  loop: "{{ pnpm_version_check.results }}"
+  loop_control:
+    label: "{{ item.item.name }}"

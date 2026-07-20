@@ -1,0 +1,16 @@
+---
+# Usuarios a configurar en el entorno
+dev_users:
+  - name: jalucenyo
+    git_name: "Jose Lucenyo"
+    git_email: "1618926+jalucenyo@users.noreply.github.com"
+  - name: agent
+    git_name: "Agent"
+    git_email: "agent@localhost"
+
+# Carpeta compartida de proyectos
+projects_dir: /projects
+projects_group: projects
+
+# Version de Node.js a instalar via FNM
+node_version: "lts"

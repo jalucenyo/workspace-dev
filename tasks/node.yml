@@ -1,0 +1,85 @@
+---
+- name: Crear directorio de FNM
+  become: true
+  become_user: "{{ item.name }}"
+  ansible.builtin.file:
+    path: "~{{ item.name }}/.local/share/fnm"
+    state: directory
+    mode: "0755"
+  loop: "{{ dev_users }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Descargar e instalar FNM
+  become: true
+  become_user: "{{ item.name }}"
+  ansible.builtin.shell:
+    cmd: |
+      curl -fsSL https://fnm.vercel.app/install | bash -s -- \
+        --install-dir "$HOME/.local/share/fnm" \
+        --skip-shell
+  args:
+    creates: "~{{ item.name }}/.local/share/fnm/fnm"
+    executable: /bin/bash
+  loop: "{{ dev_users }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Anadir FNM al PATH
+  become: true
+  become_user: "{{ item.name }}"
+  ansible.builtin.blockinfile:
+    path: "~{{ item.name }}/.bashrc"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK: FNM"
+    block: |
+      export PATH="$HOME/.local/share/fnm:$PATH"
+      eval "$(fnm env --use-on-cd --shell bash)"
+    create: true
+    mode: "0644"
+  loop: "{{ dev_users }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Instalar Node.js
+  become: true
+  become_user: "{{ item.name }}"
+  ansible.builtin.shell:
+    cmd: |
+      export PATH="$HOME/.local/share/fnm:$PATH"
+      eval "$(fnm env --shell bash)"
+      if [ "{{ node_version }}" = "lts" ]; then
+        fnm install --lts
+        LTS_VERSION=$(fnm list | grep -i lts | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+        fnm default "$LTS_VERSION"
+      else
+        fnm install {{ node_version }}
+        fnm default {{ node_version }}
+      fi
+  args:
+    executable: /bin/bash
+  loop: "{{ dev_users }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Verificar Node
+  become: true
+  become_user: "{{ item.name }}"
+  ansible.builtin.shell:
+    cmd: |
+      export PATH="$HOME/.local/share/fnm:$PATH"
+      eval "$(fnm env --shell bash)"
+      node --version
+  args:
+    executable: /bin/bash
+  register: node_version_check
+  changed_when: false
+  loop: "{{ dev_users }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Mostrar version de Node
+  ansible.builtin.debug:
+    msg: "Node de {{ item.item.name }}: {{ item.stdout }}"
+  loop: "{{ node_version_check.results }}"
+  loop_control:
+    label: "{{ item.item.name }}"

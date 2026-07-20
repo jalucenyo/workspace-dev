@@ -1,0 +1,105 @@
+---
+- name: Actualizar cache de apt
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+  changed_when: false
+
+- name: Instalar dependencias base
+  ansible.builtin.apt:
+    name:
+      - git
+      - rsync
+      - curl
+      - wget
+      - unzip
+      - zip
+      - apt-transport-https
+      - ca-certificates
+      - gnupg
+      - software-properties-common
+      - acl
+      - build-essential
+      - python3
+      - python3-pip
+      - python3-venv
+      - python3-dev
+      - openssh-server
+    state: present
+
+- name: Asegurar que el servicio SSH esta activo
+  ansible.builtin.systemd:
+    name: ssh
+    state: started
+    enabled: true
+
+- name: Asegurar que el directorio de keyrings existe
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: "0755"
+
+- name: Descargar clave GPG de Docker
+  ansible.builtin.get_url:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    dest: /etc/apt/keyrings/docker.asc
+    mode: "0644"
+
+- name: Anadir repositorio de Docker
+  ansible.builtin.apt_repository:
+    repo: "deb [arch={{ ansible_facts.architecture | regex_replace('x86_64', 'amd64') }} signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+    state: present
+    filename: docker
+
+- name: Instalar Docker CE
+  ansible.builtin.apt:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
+    state: present
+    update_cache: true
+
+- name: Asegurar que Docker esta activo
+  ansible.builtin.systemd:
+    name: docker
+    state: started
+    enabled: true
+
+- name: Descargar clave GPG de Microsoft
+  ansible.builtin.get_url:
+    url: https://packages.microsoft.com/keys/microsoft.asc
+    dest: /etc/apt/keyrings/packages.microsoft.asc
+    mode: "0644"
+
+- name: Anadir repositorio de VS Code
+  ansible.builtin.apt_repository:
+    repo: "deb [arch={{ ansible_facts.architecture | regex_replace('x86_64', 'amd64') }} signed-by=/etc/apt/keyrings/packages.microsoft.asc] https://packages.microsoft.com/repos/code stable main"
+    state: present
+    filename: vscode
+
+- name: Instalar VS Code
+  ansible.builtin.apt:
+    name: code
+    state: present
+    update_cache: true
+
+- name: Descargar clave GPG de GitHub CLI
+  ansible.builtin.get_url:
+    url: https://cli.github.com/packages/githubcli-archive-keyring.gpg
+    dest: /usr/share/keyrings/githubcli-archive-keyring.gpg
+    mode: "0644"
+
+- name: Anadir repositorio de GitHub CLI
+  ansible.builtin.apt_repository:
+    repo: "deb [arch={{ ansible_facts.architecture | regex_replace('x86_64', 'amd64') }} signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main"
+    state: present
+    filename: github-cli
+
+- name: Instalar GitHub CLI
+  ansible.builtin.apt:
+    name: gh
+    state: present
+    update_cache: true

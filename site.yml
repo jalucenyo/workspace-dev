@@ -1,0 +1,78 @@
+---
+- name: Instalar entorno de desarrollo
+  hosts: localhost
+  connection: local
+  become: true
+  gather_facts: true
+
+  vars_files:
+    - group_vars/all.yml
+
+  vars_prompt:
+    - name: github_token
+      prompt: "PAT de GitHub (dejar vacio para omitir auth de gh)"
+      private: true
+      default: "{{ lookup('env', 'GITHUB_TOKEN') | default('', true) }}"
+
+  tasks:
+    - name: Configuracion del sistema
+      ansible.builtin.import_tasks: tasks/system.yml
+
+    - name: Configuracion de usuarios y grupos
+      ansible.builtin.import_tasks: tasks/users.yml
+
+    - name: Configuracion del workspace compartido
+      ansible.builtin.import_tasks: tasks/workspace.yml
+
+    - name: Configuracion SSH por usuario
+      ansible.builtin.import_tasks: tasks/ssh.yml
+
+    - name: Configuracion Git por usuario
+      ansible.builtin.import_tasks: tasks/git.yml
+
+    - name: Autenticacion GitHub CLI por usuario
+      ansible.builtin.import_tasks: tasks/github_cli.yml
+
+    - name: Instalacion de Node.js por usuario
+      ansible.builtin.import_tasks: tasks/node.yml
+
+    - name: Instalacion de pnpm por usuario
+      ansible.builtin.import_tasks: tasks/pnpm.yml
+
+    - name: Instalacion de Python + uv por usuario
+      ansible.builtin.import_tasks: tasks/python.yml
+
+    - name: Instalacion de agentes de codigo por usuario
+      ansible.builtin.import_tasks: tasks/agents.yml
+
+    - name: Instalacion de Portless por usuario
+      ansible.builtin.import_tasks: tasks/portless.yml
+
+  post_tasks:
+    - name: Leer claves publicas SSH para el resumen
+      become: true
+      become_user: "{{ item.name }}"
+      ansible.builtin.slurp:
+        src: "~{{ item.name }}/.ssh/id_ed25519.pub"
+      register: ssh_pub_keys
+      loop: "{{ dev_users }}"
+      loop_control:
+        label: "{{ item.name }}"
+
+    - name: Resumen final de configuracion
+      ansible.builtin.debug:
+        msg: "{{ resumen }}"
+      vars:
+        resumen: >-
+          {{
+            ['========================================']
+            + ['ENTORNO CONFIGURADO CORRECTAMENTE']
+            + ['========================================']
+            + ['Usuarios configurados: ' + (dev_users | map(attribute='name') | list | join(', '))]
+            + ['Workspace compartido: ' + projects_dir]
+            + ['']
+            + ['Claves publicas SSH para GitHub:']
+            + (ssh_pub_keys.results | map(attribute='item.name') | zip(ssh_pub_keys.results | map(attribute='content') | map('b64decode') | map('trim')) | map('join', ': ') | map('regex_replace', '^(.*)$', '- \1') | list)
+            + (['Nota: no se proporciono PAT de GitHub. Autentica gh manualmente con: gh auth login'] if github_token | length == 0 else [])
+            + ['========================================']
+          }}

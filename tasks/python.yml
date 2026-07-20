@@ -1,0 +1,61 @@
+---
+- name: Crear directorio .local/bin
+  become: true
+  become_user: "{{ item.name }}"
+  ansible.builtin.file:
+    path: "~{{ item.name }}/.local/bin"
+    state: directory
+    mode: "0755"
+  loop: "{{ dev_users }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Descargar e instalar uv
+  become: true
+  become_user: "{{ item.name }}"
+  ansible.builtin.shell:
+    cmd: |
+      curl -LsSf https://astral.sh/uv/install.sh | sh
+  args:
+    creates: "~{{ item.name }}/.local/bin/uv"
+    executable: /bin/bash
+  loop: "{{ dev_users }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Anadir uv al PATH
+  become: true
+  become_user: "{{ item.name }}"
+  ansible.builtin.blockinfile:
+    path: "~{{ item.name }}/.bashrc"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK: uv"
+    block: |
+      export PATH="$HOME/.local/bin:$PATH"
+      eval "$(uv generate-shell-completion bash)"
+    create: true
+    mode: "0644"
+  loop: "{{ dev_users }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Verificar uv
+  become: true
+  become_user: "{{ item.name }}"
+  ansible.builtin.shell:
+    cmd: |
+      export PATH="$HOME/.local/bin:$PATH"
+      uv --version
+  args:
+    executable: /bin/bash
+  register: uv_version_check
+  changed_when: false
+  loop: "{{ dev_users }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Mostrar version de uv
+  ansible.builtin.debug:
+    msg: "uv de {{ item.item.name }}: {{ item.stdout }}"
+  loop: "{{ uv_version_check.results }}"
+  loop_control:
+    label: "{{ item.item.name }}"

@@ -1,0 +1,106 @@
+---
+- name: Asegurar que .local/bin existe
+  become: true
+  become_user: "{{ item.name }}"
+  ansible.builtin.file:
+    path: "~{{ item.name }}/.local/bin"
+    state: directory
+    mode: "0755"
+  loop: "{{ dev_users }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Instalar Node.js 24 para Portless
+  become: true
+  become_user: "{{ item.name }}"
+  ansible.builtin.shell:
+    cmd: |
+      export PATH="$HOME/.local/share/fnm:$PATH"
+      eval "$(fnm env --shell bash)"
+      fnm install 24
+  args:
+    executable: /bin/bash
+  loop: "{{ dev_users }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Instalar Portless globalmente con Node 24
+  become: true
+  become_user: "{{ item.name }}"
+  ansible.builtin.shell:
+    cmd: |
+      export PATH="$HOME/.local/share/fnm:$PATH"
+      eval "$(fnm env --shell bash)"
+      fnm exec --using=24 npm install -g portless
+  args:
+    creates: "~{{ item.name }}/.local/bin/portless"
+    executable: /bin/bash
+  loop: "{{ dev_users }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Obtener ruta del binario global de Portless
+  become: true
+  become_user: "{{ item.name }}"
+  ansible.builtin.shell:
+    cmd: |
+      export PATH="$HOME/.local/share/fnm:$PATH"
+      eval "$(fnm env --shell bash)"
+      fnm exec --using=24 npm config get prefix
+  args:
+    executable: /bin/bash
+  register: portless_prefix
+  changed_when: false
+  loop: "{{ dev_users }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Crear symlink de portless en .local/bin
+  become: true
+  become_user: "{{ item.item.name }}"
+  ansible.builtin.file:
+    src: "{{ item.stdout | trim }}/bin/portless"
+    dest: "~{{ item.item.name }}/.local/bin/portless"
+    state: link
+    force: true
+  loop: "{{ portless_prefix.results }}"
+  loop_control:
+    label: "{{ item.item.name }}"
+
+- name: Anadir .local/bin al PATH
+  become: true
+  become_user: "{{ item.name }}"
+  ansible.builtin.blockinfile:
+    path: "~{{ item.name }}/.bashrc"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK: local bin"
+    block: |
+      export PATH="$HOME/.local/bin:$PATH"
+    create: true
+    mode: "0644"
+  loop: "{{ dev_users }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Verificar Portless
+  become: true
+  become_user: "{{ item.name }}"
+  ansible.builtin.shell:
+    cmd: |
+      export PATH="$HOME/.local/bin:$HOME/.local/share/fnm:$PATH"
+      eval "$(fnm env --shell bash)"
+      portless --version
+  args:
+    executable: /bin/bash
+  register: portless_version_check
+  changed_when: false
+  ignore_errors: true
+  loop: "{{ dev_users }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Mostrar version de Portless
+  ansible.builtin.debug:
+    msg: "Portless de {{ item.item.name }}: {{ item.stdout | default('no disponible') }}"
+  loop: "{{ portless_version_check.results }}"
+  loop_control:
+    label: "{{ item.item.name }}"

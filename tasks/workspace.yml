@@ -1,0 +1,63 @@
+---
+- name: Asegurar que el directorio workspace existe
+  ansible.builtin.file:
+    path: "{{ projects_dir }}"
+    state: directory
+    owner: root
+    group: "{{ projects_group }}"
+    mode: "2775"
+
+- name: Aplicar ACLs para los usuarios en el workspace
+  ansible.builtin.acl:
+    path: "{{ projects_dir }}"
+    entity: "{{ item.name }}"
+    etype: user
+    permissions: rwx
+    default: false
+    state: present
+  loop: "{{ dev_users }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Aplicar ACLs por defecto para heredar permisos
+  ansible.builtin.acl:
+    path: "{{ projects_dir }}"
+    entity: "{{ item.name }}"
+    etype: user
+    permissions: rwx
+    default: true
+    state: present
+  loop: "{{ dev_users }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Aplicar ACL de grupo por defecto
+  ansible.builtin.acl:
+    path: "{{ projects_dir }}"
+    entity: "{{ projects_group }}"
+    etype: group
+    permissions: rwx
+    default: true
+    state: present
+
+- name: Crear carpetas projects en cada home
+  ansible.builtin.file:
+    path: "~{{ item.name }}/projects"
+    state: directory
+    owner: "{{ item.name }}"
+    group: "{{ item.name }}"
+    mode: "0755"
+  loop: "{{ dev_users }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Montar /projects en cada home via bind
+  ansible.posix.mount:
+    path: "~{{ item.name }}/projects"
+    src: "{{ projects_dir }}"
+    fstype: none
+    opts: bind,rw,x-gvfs-hide
+    state: mounted
+  loop: "{{ dev_users }}"
+  loop_control:
+    label: "{{ item.name }}"

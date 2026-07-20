@@ -1,0 +1,55 @@
+---
+- name: Configurar user.name
+  become: true
+  become_user: "{{ item.name }}"
+  ansible.builtin.git_config:
+    name: user.name
+    value: "{{ item.git_name }}"
+    scope: global
+  loop: "{{ dev_users }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Configurar user.email
+  become: true
+  become_user: "{{ item.name }}"
+  ansible.builtin.git_config:
+    name: user.email
+    value: "{{ item.git_email }}"
+    scope: global
+  loop: "{{ dev_users }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Configurar init.defaultBranch
+  become: true
+  become_user: "{{ item.name }}"
+  ansible.builtin.git_config:
+    name: init.defaultBranch
+    value: "main"
+    scope: global
+  loop: "{{ dev_users }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Configurar pull.rebase
+  become: true
+  become_user: "{{ item.name }}"
+  ansible.builtin.git_config:
+    name: pull.rebase
+    value: "false"
+    scope: global
+  loop: "{{ dev_users }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Configurar core.editor
+  become: true
+  become_user: "{{ item.name }}"
+  ansible.builtin.git_config:
+    name: core.editor
+    value: "code --wait"
+    scope: global
+  loop: "{{ dev_users }}"
+  loop_control:
+    label: "{{ item.name }}"

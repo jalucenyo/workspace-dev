@@ -1,0 +1,29 @@
+---
+- name: Comprobar si gh esta autenticado
+  become: true
+  become_user: "{{ item.name }}"
+  ansible.builtin.command:
+    cmd: gh auth status
+  register: gh_status
+  ignore_errors: true
+  changed_when: false
+  loop: "{{ dev_users }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when: github_token is defined and github_token | length > 0
+
+- name: Autenticar gh con el PAT
+  become: true
+  become_user: "{{ item.item.name }}"
+  ansible.builtin.shell:
+    cmd: "echo '{{ github_token }}' | gh auth login --with-token"
+  environment:
+    GH_TOKEN: "{{ github_token }}"
+  loop: "{{ gh_status.results }}"
+  loop_control:
+    label: "{{ item.item.name }}"
+  when:
+    - github_token is defined
+    - github_token | length > 0
+    - item.rc != 0
+  no_log: true

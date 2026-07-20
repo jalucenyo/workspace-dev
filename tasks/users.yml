@@ -1,0 +1,25 @@
+---
+- name: Asegurar que el grupo de proyectos existe
+  ansible.builtin.group:
+    name: "{{ projects_group }}"
+    state: present
+
+- name: Asegurar que el usuario agent existe
+  ansible.builtin.user:
+    name: agent
+    shell: /bin/bash
+    groups: "{{ projects_group }},docker"
+    append: true
+    state: present
+
+- name: Asegurar que el usuario jalucenyo pertenece a los grupos necesarios
+  ansible.builtin.user:
+    name: jalucenyo
+    groups: "{{ projects_group }},docker"
+    append: true
+    state: present
+
+- name: Asegurar que agent no tiene sudo
+  ansible.builtin.file:
+    path: /etc/sudoers.d/agent
+    state: absent
