@@ -15,7 +15,7 @@
   become_user: "{{ item.name }}"
   ansible.builtin.shell:
     cmd: |
-      curl -fsSL https://get.pnpm.io/install.sh | env PNPM_HOME="$HOME/.local/share/pnpm" sh -
+      curl -fsSL https://get.pnpm.io/install.sh | env SHELL=/bin/bash PNPM_HOME="$HOME/.local/share/pnpm" bash -
   args:
     creates: "~{{ item.name }}/.local/share/pnpm/bin/pnpm"
     executable: /bin/bash
