@@ -1,0 +1,50 @@
+---
+- name: Comprobar si Antigravity CLI esta instalado
+  become: true
+  become_user: "{{ item.name }}"
+  ansible.builtin.shell:
+    cmd: |
+      command -v antigravity
+  args:
+    executable: /bin/bash
+  register: antigravity_check
+  changed_when: false
+  failed_when: false
+  loop: "{{ dev_users }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Instalar Antigravity CLI
+  become: true
+  become_user: "{{ item.item.name }}"
+  ansible.builtin.shell:
+    cmd: |
+      curl -fsSL https://antigravity.google/cli/install.sh | bash
+  args:
+    executable: /bin/bash
+  loop: "{{ antigravity_check.results }}"
+  loop_control:
+    label: "{{ item.item.name }}"
+  when: item.rc != 0
+
+- name: Verificar Antigravity CLI
+  become: true
+  become_user: "{{ item.name }}"
+  ansible.builtin.shell:
+    cmd: |
+      command -v antigravity
+  args:
+    executable: /bin/bash
+  register: antigravity_version_check
+  changed_when: false
+  failed_when: false
+  loop: "{{ dev_users }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Mostrar ruta de Antigravity CLI
+  ansible.builtin.debug:
+    msg: "Antigravity CLI de {{ item.item.name }}: {{ item.stdout | default('no disponible') }}"
+  loop: "{{ antigravity_version_check.results }}"
+  loop_control:
+    label: "{{ item.item.name }}"

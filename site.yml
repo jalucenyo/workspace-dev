@@ -48,6 +48,9 @@
     - name: Instalacion de Portless por usuario
       ansible.builtin.import_tasks: tasks/portless.yml
 
+    - name: Instalacion de Antigravity CLI por usuario
+      ansible.builtin.import_tasks: tasks/antigravity.yml
+
   post_tasks:
     - name: Leer claves publicas SSH para el resumen
       become: true
