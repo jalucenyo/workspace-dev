@@ -1,0 +1,56 @@
+---
+- name: Comprobar si OpenSpec esta instalado
+  become: true
+  become_user: "{{ item.name }}"
+  ansible.builtin.shell:
+    cmd: |
+      export PATH="$HOME/.local/bin:$HOME/.local/share/fnm:$PATH"
+      eval "$(fnm env --shell bash)"
+      command -v openspec
+  args:
+    executable: /bin/bash
+  register: openspec_check
+  changed_when: false
+  failed_when: false
+  loop: "{{ dev_users }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Instalar OpenSpec
+  become: true
+  become_user: "{{ item.item.name }}"
+  ansible.builtin.shell:
+    cmd: |
+      export PATH="$HOME/.local/bin:$HOME/.local/share/fnm:$PATH"
+      eval "$(fnm env --shell bash)"
+      npm install -g @fission-ai/openspec@latest
+  args:
+    executable: /bin/bash
+  loop: "{{ openspec_check.results }}"
+  loop_control:
+    label: "{{ item.item.name }}"
+  when: item.rc != 0
+
+- name: Verificar OpenSpec
+  become: true
+  become_user: "{{ item.name }}"
+  ansible.builtin.shell:
+    cmd: |
+      export PATH="$HOME/.local/bin:$HOME/.local/share/fnm:$PATH"
+      eval "$(fnm env --shell bash)"
+      openspec --version
+  args:
+    executable: /bin/bash
+  register: openspec_version_check
+  changed_when: false
+  failed_when: false
+  loop: "{{ dev_users }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Mostrar version de OpenSpec
+  ansible.builtin.debug:
+    msg: "OpenSpec de {{ item.item.name }}: {{ item.stdout | default('no disponible') }}"
+  loop: "{{ openspec_version_check.results }}"
+  loop_control:
+    label: "{{ item.item.name }}"

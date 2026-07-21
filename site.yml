@@ -51,6 +51,9 @@
     - name: Instalacion de Antigravity CLI por usuario
       ansible.builtin.import_tasks: tasks/antigravity.yml
 
+    - name: Instalacion de OpenSpec por usuario
+      ansible.builtin.import_tasks: tasks/openspec.yml
+
   post_tasks:
     - name: Leer claves publicas SSH para el resumen
       become: true
