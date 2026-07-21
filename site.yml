@@ -5,66 +5,84 @@
   become: true
   gather_facts: true
 
-  vars_files:
-    - group_vars/all.yml
-
   vars_prompt:
     - name: github_token
       prompt: "PAT de GitHub (dejar vacio para omitir auth de gh)"
       private: true
-      default: ""
+      default: "{{ lookup('ansible.builtin.env', 'GITHUB_TOKEN', default='') }}"
 
   tasks:
     - name: Configuracion del sistema
       ansible.builtin.import_tasks: tasks/system.yml
+      tags:
+        - system
+        - docker
+        - vscode
+        - github
 
     - name: Configuracion de usuarios y grupos
       ansible.builtin.import_tasks: tasks/users.yml
+      tags:
+        - users
 
     - name: Configuracion del workspace compartido
       ansible.builtin.import_tasks: tasks/workspace.yml
+      tags:
+        - workspace
 
     - name: Configuracion SSH por usuario
       ansible.builtin.import_tasks: tasks/ssh.yml
+      tags:
+        - ssh
 
     - name: Configuracion Git por usuario
       ansible.builtin.import_tasks: tasks/git.yml
+      tags:
+        - git
 
     - name: Autenticacion GitHub CLI por usuario
       ansible.builtin.import_tasks: tasks/github_cli.yml
+      tags:
+        - github
+        - github_cli
 
     - name: Instalacion de Node.js por usuario
       ansible.builtin.import_tasks: tasks/node.yml
+      tags:
+        - node
 
     - name: Instalacion de pnpm por usuario
       ansible.builtin.import_tasks: tasks/pnpm.yml
+      tags:
+        - node
+        - pnpm
 
     - name: Instalacion de Python + uv por usuario
       ansible.builtin.import_tasks: tasks/python.yml
+      tags:
+        - python
 
     - name: Instalacion de agentes de codigo por usuario
       ansible.builtin.import_tasks: tasks/agents.yml
+      tags:
+        - agents
 
     - name: Instalacion de Portless por usuario
       ansible.builtin.import_tasks: tasks/portless.yml
+      tags:
+        - portless
 
     - name: Instalacion de Antigravity CLI por usuario
       ansible.builtin.import_tasks: tasks/antigravity.yml
+      tags:
+        - antigravity
 
     - name: Instalacion de OpenSpec por usuario
       ansible.builtin.import_tasks: tasks/openspec.yml
+      tags:
+        - openspec
 
   post_tasks:
-    - name: Leer claves publicas SSH para el resumen
-      become: true
-      become_user: "{{ item.name }}"
-      ansible.builtin.slurp:
-        src: "~{{ item.name }}/.ssh/id_ed25519.pub"
-      register: ssh_pub_keys
-      loop: "{{ dev_users }}"
-      loop_control:
-        label: "{{ item.name }}"
-
     - name: Resumen final de configuracion
       ansible.builtin.debug:
         msg: "{{ resumen }}"
@@ -78,7 +96,7 @@
             + ['Workspace compartido: ' + projects_dir]
             + ['']
             + ['Claves publicas SSH para GitHub:']
-            + (ssh_pub_keys.results | map(attribute='item.name') | zip(ssh_pub_keys.results | map(attribute='content') | map('b64decode') | map('trim')) | map('join', ': ') | map('regex_replace', '^(.*)$', '- \1') | list)
+            + (ssh_pub_keys.results | default([]) | map(attribute='item.name') | zip(ssh_pub_keys.results | default([]) | map(attribute='content') | map('b64decode') | map('trim')) | map('join', ': ') | map('regex_replace', '^(.*)$', '- \1') | list)
             + (['Nota: no se proporciono PAT de GitHub. Autentica gh manualmente con: gh auth login'] if github_token | length == 0 else [])
             + ['========================================']
           }}

@@ -1,6 +1,5 @@
 ---
 - name: Instalar OpenCode
-  become: true
   become_user: "{{ item.name }}"
   ansible.builtin.shell:
     cmd: |
@@ -13,7 +12,6 @@
     label: "{{ item.name }}"
 
 - name: Anadir OpenCode al PATH
-  become: true
   become_user: "{{ item.name }}"
   ansible.builtin.blockinfile:
     path: "~{{ item.name }}/.bashrc"
@@ -27,7 +25,6 @@
     label: "{{ item.name }}"
 
 - name: Verificar OpenCode
-  become: true
   become_user: "{{ item.name }}"
   ansible.builtin.shell:
     cmd: |
@@ -50,12 +47,10 @@
     label: "{{ item.item.name }}"
 
 - name: Comprobar si Claude Code esta instalado
-  become: true
   become_user: "{{ item.name }}"
   ansible.builtin.shell:
     cmd: |
-      export PATH="$HOME/.local/bin:$HOME/.local/share/fnm:$HOME/.local/share/pnpm:$PATH"
-      eval "$(fnm env --shell bash)"
+      {{ node_env_preamble }}
       command -v claude
   args:
     executable: /bin/bash
@@ -67,12 +62,10 @@
     label: "{{ item.name }}"
 
 - name: Instalar Claude Code
-  become: true
   become_user: "{{ item.item.name }}"
   ansible.builtin.shell:
     cmd: |
-      export PATH="$HOME/.local/bin:$HOME/.local/share/fnm:$HOME/.local/share/pnpm:$PATH"
-      eval "$(fnm env --shell bash)"
+      {{ node_env_preamble }}
       curl -fsSL https://claude.ai/install.sh | bash
   args:
     executable: /bin/bash
@@ -82,12 +75,10 @@
   when: item.rc != 0
 
 - name: Verificar Claude Code
-  become: true
   become_user: "{{ item.name }}"
   ansible.builtin.shell:
     cmd: |
-      export PATH="$HOME/.local/bin:$HOME/.local/share/fnm:$HOME/.local/share/pnpm:$PATH"
-      eval "$(fnm env --shell bash)"
+      {{ node_env_preamble }}
       claude --version
   args:
     executable: /bin/bash

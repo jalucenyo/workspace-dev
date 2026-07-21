@@ -1,6 +1,5 @@
 ---
 - name: Crear directorio de pnpm
-  become: true
   become_user: "{{ item.name }}"
   ansible.builtin.file:
     path: "~{{ item.name }}/.local/share/pnpm"
@@ -11,7 +10,6 @@
     label: "{{ item.name }}"
 
 - name: Descargar e instalar pnpm
-  become: true
   become_user: "{{ item.name }}"
   ansible.builtin.shell:
     cmd: |
@@ -24,7 +22,6 @@
     label: "{{ item.name }}"
 
 - name: Anadir pnpm al PATH
-  become: true
   become_user: "{{ item.name }}"
   ansible.builtin.blockinfile:
     path: "~{{ item.name }}/.bashrc"
@@ -42,7 +39,6 @@
     label: "{{ item.name }}"
 
 - name: Verificar pnpm
-  become: true
   become_user: "{{ item.name }}"
   ansible.builtin.shell:
     cmd: |

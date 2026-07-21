@@ -55,19 +55,18 @@
   loop_control:
     label: "{{ item.name }}"
 
-- name: Leer clave publica
-  become: true
+- name: Leer claves publicas
   become_user: "{{ item.name }}"
   ansible.builtin.slurp:
     src: "~{{ item.name }}/.ssh/id_ed25519.pub"
-  register: ssh_pub_key
+  register: ssh_pub_keys
   loop: "{{ dev_users }}"
   loop_control:
     label: "{{ item.name }}"
 
-- name: Mostrar clave publica
+- name: Mostrar claves publicas
   ansible.builtin.debug:
     msg: "Clave publica de {{ item.item.name }} para GitHub: {{ item.content | b64decode | trim }}"
-  loop: "{{ ssh_pub_key.results }}"
+  loop: "{{ ssh_pub_keys.results }}"
   loop_control:
     label: "{{ item.item.name }}"

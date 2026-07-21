@@ -1,6 +1,5 @@
 ---
 - name: Crear directorio .local/bin
-  become: true
   become_user: "{{ item.name }}"
   ansible.builtin.file:
     path: "~{{ item.name }}/.local/bin"
@@ -11,7 +10,6 @@
     label: "{{ item.name }}"
 
 - name: Descargar e instalar uv
-  become: true
   become_user: "{{ item.name }}"
   ansible.builtin.shell:
     cmd: |
@@ -24,7 +22,6 @@
     label: "{{ item.name }}"
 
 - name: Anadir uv al PATH
-  become: true
   become_user: "{{ item.name }}"
   ansible.builtin.blockinfile:
     path: "~{{ item.name }}/.bashrc"
@@ -39,7 +36,6 @@
     label: "{{ item.name }}"
 
 - name: Verificar uv
-  become: true
   become_user: "{{ item.name }}"
   ansible.builtin.shell:
     cmd: |

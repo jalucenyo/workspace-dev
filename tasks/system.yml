@@ -56,28 +56,32 @@
     state: directory
     mode: "0755"
 
-- name: Descargar clave GPG de Docker
+- name: Descargar claves GPG de repositorios externos
   ansible.builtin.get_url:
-    url: https://download.docker.com/linux/ubuntu/gpg
-    dest: /etc/apt/keyrings/docker.asc
+    url: "{{ item.key_url }}"
+    dest: "{{ item.key_dest }}"
     mode: "0644"
+  loop: "{{ apt_external_repos }}"
+  loop_control:
+    label: "{{ item.name }}"
 
-- name: Anadir repositorio de Docker
+- name: Anadir repositorios externos
   ansible.builtin.apt_repository:
-    repo: "deb [arch={{ ansible_facts.architecture | regex_replace('x86_64', 'amd64') }} signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+    repo: "{{ item.repo }}"
     state: present
-    filename: docker
+    filename: "{{ item.filename }}"
+  loop: "{{ apt_external_repos }}"
+  loop_control:
+    label: "{{ item.name }}"
 
-- name: Instalar Docker CE
+- name: Instalar paquetes de repositorios externos
   ansible.builtin.apt:
-    name:
-      - docker-ce
-      - docker-ce-cli
-      - containerd.io
-      - docker-buildx-plugin
-      - docker-compose-plugin
+    name: "{{ item.packages }}"
     state: present
     update_cache: true
+  loop: "{{ apt_external_repos }}"
+  loop_control:
+    label: "{{ item.name }}"
 
 - name: Asegurar que Docker esta activo
   ansible.builtin.systemd:
@@ -85,38 +89,3 @@
     state: started
     enabled: true
 
-- name: Descargar clave GPG de Microsoft
-  ansible.builtin.get_url:
-    url: https://packages.microsoft.com/keys/microsoft.asc
-    dest: /etc/apt/keyrings/packages.microsoft.asc
-    mode: "0644"
-
-- name: Anadir repositorio de VS Code
-  ansible.builtin.apt_repository:
-    repo: "deb [arch={{ ansible_facts.architecture | regex_replace('x86_64', 'amd64') }} signed-by=/etc/apt/keyrings/packages.microsoft.asc] https://packages.microsoft.com/repos/code stable main"
-    state: present
-    filename: vscode
-
-- name: Instalar VS Code
-  ansible.builtin.apt:
-    name: code
-    state: present
-    update_cache: true
-
-- name: Descargar clave GPG de GitHub CLI
-  ansible.builtin.get_url:
-    url: https://cli.github.com/packages/githubcli-archive-keyring.gpg
-    dest: /usr/share/keyrings/githubcli-archive-keyring.gpg
-    mode: "0644"
-
-- name: Anadir repositorio de GitHub CLI
-  ansible.builtin.apt_repository:
-    repo: "deb [arch={{ ansible_facts.architecture | regex_replace('x86_64', 'amd64') }} signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main"
-    state: present
-    filename: github-cli
-
-- name: Instalar GitHub CLI
-  ansible.builtin.apt:
-    name: gh
-    state: present
-    update_cache: true

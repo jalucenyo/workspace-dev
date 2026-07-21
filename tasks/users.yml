@@ -4,22 +4,22 @@
     name: "{{ projects_group }}"
     state: present
 
-- name: Asegurar que el usuario agent existe
+- name: Asegurar que los usuarios de desarrollo existen y pertenecen a los grupos necesarios
   ansible.builtin.user:
-    name: agent
+    name: "{{ item.name }}"
     shell: /bin/bash
     groups: "{{ projects_group }},docker"
     append: true
     state: present
+  loop: "{{ dev_users }}"
+  loop_control:
+    label: "{{ item.name }}"
 
-- name: Asegurar que el usuario jalucenyo pertenece a los grupos necesarios
-  ansible.builtin.user:
-    name: jalucenyo
-    groups: "{{ projects_group }},docker"
-    append: true
-    state: present
-
-- name: Asegurar que agent no tiene sudo
+- name: Asegurar que los usuarios sin privilegios no tienen entrada en sudoers.d
   ansible.builtin.file:
-    path: /etc/sudoers.d/agent
+    path: "/etc/sudoers.d/{{ item.name }}"
     state: absent
+  loop: "{{ dev_users }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when: not item.sudo | default(true) | bool

@@ -4,9 +4,11 @@ dev_users:
   - name: jalucenyo
     git_name: "Jose Lucenyo"
     git_email: "1618926+jalucenyo@users.noreply.github.com"
+    sudo: true
   - name: agent
     git_name: "Agent"
     git_email: "agent@localhost"
+    sudo: false
 
 # Carpeta compartida de proyectos
 projects_dir: /projects
@@ -14,3 +16,42 @@ projects_group: projects
 
 # Version de Node.js a instalar via FNM
 node_version: "lts"
+
+# Preamble comun para herramientas que necesitan Node/FNM en el PATH
+node_env_preamble: |
+  export PATH="$HOME/.local/bin:$HOME/.local/share/fnm:$HOME/.local/share/pnpm:$PATH"
+  eval "$(fnm env --shell bash)"
+
+# Configuracion global de Git (aplicada a todos los usuarios)
+git_global_config:
+  init.defaultBranch: "main"
+  pull.rebase: "false"
+  core.editor: "code --wait"
+
+# Repositorios externos gestionados por el playbook
+apt_external_repos:
+  - name: docker
+    key_url: https://download.docker.com/linux/ubuntu/gpg
+    key_dest: /etc/apt/keyrings/docker.asc
+    repo: "deb [arch={{ ansible_facts.architecture | regex_replace('x86_64', 'amd64') }} signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+    filename: docker
+    packages:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
+  - name: vscode
+    key_url: https://packages.microsoft.com/keys/microsoft.asc
+    key_dest: /etc/apt/keyrings/packages.microsoft.asc
+    repo: "deb [arch={{ ansible_facts.architecture | regex_replace('x86_64', 'amd64') }} signed-by=/etc/apt/keyrings/packages.microsoft.asc] https://packages.microsoft.com/repos/code stable main"
+    filename: vscode
+    packages:
+      - code
+  - name: github-cli
+    key_url: https://cli.github.com/packages/githubcli-archive-keyring.gpg
+    key_dest: /usr/share/keyrings/githubcli-archive-keyring.gpg
+    repo: "deb [arch={{ ansible_facts.architecture | regex_replace('x86_64', 'amd64') }} signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main"
+    filename: github-cli
+    packages:
+      - gh

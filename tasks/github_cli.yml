@@ -1,6 +1,5 @@
 ---
 - name: Comprobar si gh esta autenticado
-  become: true
   become_user: "{{ item.name }}"
   ansible.builtin.command:
     cmd: gh auth status
@@ -13,7 +12,6 @@
   when: github_token is defined and github_token | length > 0
 
 - name: Autenticar gh con el PAT
-  become: true
   become_user: "{{ item.item.name }}"
   ansible.builtin.shell:
     cmd: "echo '{{ github_token }}' | gh auth login --with-token"

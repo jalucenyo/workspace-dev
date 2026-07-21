@@ -1,6 +1,5 @@
 ---
 - name: Crear directorio de FNM
-  become: true
   become_user: "{{ item.name }}"
   ansible.builtin.file:
     path: "~{{ item.name }}/.local/share/fnm"
@@ -11,7 +10,6 @@
     label: "{{ item.name }}"
 
 - name: Descargar e instalar FNM
-  become: true
   become_user: "{{ item.name }}"
   ansible.builtin.shell:
     cmd: |
@@ -26,7 +24,6 @@
     label: "{{ item.name }}"
 
 - name: Anadir FNM al PATH
-  become: true
   become_user: "{{ item.name }}"
   ansible.builtin.blockinfile:
     path: "~{{ item.name }}/.bashrc"
@@ -41,7 +38,6 @@
     label: "{{ item.name }}"
 
 - name: Instalar Node.js
-  become: true
   become_user: "{{ item.name }}"
   ansible.builtin.shell:
     cmd: |
@@ -62,7 +58,6 @@
     label: "{{ item.name }}"
 
 - name: Verificar Node
-  become: true
   become_user: "{{ item.name }}"
   ansible.builtin.shell:
     cmd: |

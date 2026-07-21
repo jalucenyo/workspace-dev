@@ -1,6 +1,5 @@
 ---
 - name: Comprobar si Antigravity CLI esta instalado
-  become: true
   become_user: "{{ item.name }}"
   ansible.builtin.shell:
     cmd: |
@@ -15,7 +14,6 @@
     label: "{{ item.name }}"
 
 - name: Instalar Antigravity CLI
-  become: true
   become_user: "{{ item.item.name }}"
   ansible.builtin.shell:
     cmd: |
@@ -28,8 +26,7 @@
   when: item.rc != 0
 
 - name: Verificar Antigravity CLI
-  become: true
-  become_user: "{{ item.name }}"
+  become_user: "{{ item.item.name }}"
   ansible.builtin.shell:
     cmd: |
       command -v antigravity
@@ -38,9 +35,9 @@
   register: antigravity_version_check
   changed_when: false
   failed_when: false
-  loop: "{{ dev_users }}"
+  loop: "{{ antigravity_check.results }}"
   loop_control:
-    label: "{{ item.name }}"
+    label: "{{ item.item.name }}"
 
 - name: Mostrar ruta de Antigravity CLI
   ansible.builtin.debug:

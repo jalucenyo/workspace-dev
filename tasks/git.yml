@@ -1,6 +1,5 @@
 ---
 - name: Configurar user.name
-  become: true
   become_user: "{{ item.name }}"
   ansible.builtin.git_config:
     name: user.name
@@ -11,7 +10,6 @@
     label: "{{ item.name }}"
 
 - name: Configurar user.email
-  become: true
   become_user: "{{ item.name }}"
   ansible.builtin.git_config:
     name: user.email
@@ -21,35 +19,12 @@
   loop_control:
     label: "{{ item.name }}"
 
-- name: Configurar init.defaultBranch
-  become: true
-  become_user: "{{ item.name }}"
+- name: Configurar opciones globales de Git
+  become_user: "{{ item.0.name }}"
   ansible.builtin.git_config:
-    name: init.defaultBranch
-    value: "main"
+    name: "{{ item.1.key }}"
+    value: "{{ item.1.value }}"
     scope: global
-  loop: "{{ dev_users }}"
+  loop: "{{ dev_users | product(git_global_config | dict2items) | list }}"
   loop_control:
-    label: "{{ item.name }}"
-
-- name: Configurar pull.rebase
-  become: true
-  become_user: "{{ item.name }}"
-  ansible.builtin.git_config:
-    name: pull.rebase
-    value: "false"
-    scope: global
-  loop: "{{ dev_users }}"
-  loop_control:
-    label: "{{ item.name }}"
-
-- name: Configurar core.editor
-  become: true
-  become_user: "{{ item.name }}"
-  ansible.builtin.git_config:
-    name: core.editor
-    value: "code --wait"
-    scope: global
-  loop: "{{ dev_users }}"
-  loop_control:
-    label: "{{ item.name }}"
+    label: "{{ item.0.name }} - {{ item.1.key }}"

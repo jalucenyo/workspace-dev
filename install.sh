@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+set -euo pipefail
 
 # Script de instalacion para maquinas Ubuntu nuevas.
 # Descarga el repositorio publico y ejecuta el playbook de Ansible.
