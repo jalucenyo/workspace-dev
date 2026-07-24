@@ -2,12 +2,12 @@
 # Usuarios a configurar en el entorno
 dev_users:
   - name: jalucenyo
-    git_name: "Jose Lucenyo"
+    git_name: "Lucenyo"
     git_email: "1618926+jalucenyo@users.noreply.github.com"
     sudo: true
   - name: agent
-    git_name: "Agent"
-    git_email: "agent@localhost"
+    git_name: "Lucenyo Agent"
+    git_email: "1618926+jalucenyo@users.noreply.github.com"
     sudo: false
 
 # Carpeta compartida de proyectos
